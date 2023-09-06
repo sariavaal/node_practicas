@@ -87,6 +87,13 @@ const registrar = async (req, res) => {
     })
 
 }
+//funcion que comprueba una cuenta
+
+const confirmar = (req, res) => {
+    const { token } = req.params;
+    console.log(token)
+   
+}
 
 
 const formularioOlvidePassword = (req, res) => {
@@ -103,5 +110,6 @@ export {
     formularioLogin,
     formularioRegistro,
     registrar,
+    confirmar,
     formularioOlvidePassword
 }
