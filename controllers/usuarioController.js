@@ -12,10 +12,9 @@ const formularioLogin = (req, res) => {
 
 const formularioRegistro = (req, res) => {
     res.render('auth/registro', {
-        pagina: 'Crear cuenta'
-        
+        pagina: 'Crear cuenta',
+        csrfToken: req.csrfToken()  
     })
-
 }
 
 const registrar = async (req, res) => {
@@ -89,9 +88,36 @@ const registrar = async (req, res) => {
 }
 //funcion que comprueba una cuenta
 
-const confirmar = (req, res) => {
+const confirmar = async (req, res) => {
     const { token } = req.params;
-    console.log(token)
+    //verificar si es valido
+    const usuario = await Usuario.findOne({where: {token}})
+
+    if(!usuario){
+
+        return res.render('auth/confirmarCuenta', {
+            pagina: 'Error al confirmar tu cuenta',
+            mensaje: 'Hubo un error al confirmar tu cuenta, intenta de nuevo',
+            error: true
+
+        })
+    }
+
+    //confirmar la cuenta
+    usuario.token = null;
+    usuario.confirmado = true;
+    await usuario.save();
+
+    return res.render('auth/confirmarCuenta', {
+        pagina: 'Cuenta confirmada',
+        mensaje: 'La cuenta se confirmo correctamente'
+
+    })
+
+
+
+    console.log(usuario)
+  
    
 }
 
