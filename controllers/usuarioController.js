@@ -34,6 +34,7 @@ const registrar = async (req, res) => {
         //errores
         return res.render('auth/registro', {
             pagina: 'Crear Cuenta',
+            csrfToken: req.csrfToken,
             errores: resultado.array(),
             usuario: {
                 nombre: req.body.nombre,
@@ -52,6 +53,7 @@ const registrar = async (req, res) => {
     if(existeUsuario){
         return res.render('auth/registro', {
             pagina: 'Crear Cuenta',
+            csrfToken: req.csrfToken,
             errores:[{msg : 'El usuario ya esta registrado'}],
             usuario: {
                 nombre: req.body.nombre,
@@ -124,11 +126,48 @@ const confirmar = async (req, res) => {
 
 const formularioOlvidePassword = (req, res) => {
     res.render('auth/olvide-password', {
-        pagina: 'Recupera tu acceso a bienes raices'
+        pagina: 'Recupera tu acceso a bienes raices',
+        csrfToken: req.csrfToken(),
         
     })
 
 }
+
+const resetPassword = async (req, res) => {
+     //validacion
+     await check('email').isEmail().withMessage('Email inválido').run(req)
+   
+ 
+     let resultado = validationResult(req)
+ 
+ 
+    // return res.json({errores: resultado.array()})
+     //verificar que el resultado este vacio
+     if(!resultado.isEmpty()) {
+         //errores
+         return res.render('auth/olvide-password', {
+             pagina: 'Recupera tu cuenta a Bienes Raices',
+             csrfToken: req.csrfToken(),
+             errores: resultado.array()
+            
+         
+         })
+ 
+     }
+     //buscar usuario
+     const { email } = req.body
+     const usuario = await Usuario.findOne({where: {email}})
+     if (!usuario){
+        return res.render('auth/olvide-password',{
+            pagina: 'Recupera tu acceso a Bienes Raices',
+            csrfToken: req.csrfToken(),
+            errores: ['msg: El email no pertenece a ningun usuario']
+        })
+     }
+
+     //generar un token y envIAR EL EMAIL
+}
+
 
 
 
@@ -137,5 +176,6 @@ export {
     formularioRegistro,
     registrar,
     confirmar,
-    formularioOlvidePassword
+    formularioOlvidePassword,
+    resetPassword
 }
