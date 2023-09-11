@@ -1,4 +1,5 @@
 import {check, validationResult} from 'express-validator'
+import bcrypt from 'bcrypt'
 import Usuario from '../models/Usuario.js'
 import { generarId } from '../helpers/tokens.js'
 import {emailRegistro, emailOlvidePassword} from '../helpers/emails.js'
@@ -187,7 +188,7 @@ const comprobarToken = async (req, res, ) => {
     const { token } = req.params;
     const usuario = await Usuario.findOne({where : {token}})
     if(!usuario) {
-        return res.render('auth/confirmarCuenta',{
+        return res.render('auth/confirmar-cuenta',{
             pagina: 'Reestablece tu password',
             mensaje: 'Hubo un error al validar tu información, intenta de nuevo',
             error: true
@@ -195,13 +196,43 @@ const comprobarToken = async (req, res, ) => {
     }
    // mostrar formulario para modificar password
    res.render('auth/reset-password', {
-    pagina: 'Reestablece tu password'
+    pagina: 'Reestablece tu password',
+    csrfToken: req.csrfToken()
    })
 
 }
 
-const nuevoPassword = (req, res) => {
-    
+const nuevoPassword = async (req, res) => {
+    //validar password 
+    await check ('password').isLength({ min : 8 }).withMessage('El password debe ser de al menos 8 caracteres').run(req)
+    let resultado = validationResult(req)
+
+    if(!resultado.isEmpty()) {
+        //errores
+        return res.render('auth/reset-password', {
+            pagina: 'Reestablece tu password',
+            csrfToken: req.csrfToken(),
+            errores: resultado.array(),
+        })
+
+    }
+    const { token } = req.params
+    const {password} = req.body;
+    //identificar quien hace el cambio
+    const usuario = await Usuario.findOne({where: {token}})
+
+    //hashear el nuevo password
+    const salt = await bcrypt.genSalt(10)
+    usuario.password = await bcrypt.hash( password, salt);
+    usuario.token = null;
+
+    await usuario.save();
+
+    res.render('auth/confirmar-cuenta', {
+        pagina: 'Password reestablecido',
+        mensaje: 'El password se guardo correctamente'
+    })
+
 }
 
 
