@@ -14,6 +14,7 @@ app.use( express.urlencoded({extended: true}) )
 //habilitar cookie parser
 app.use( cookieParser())
 
+app.use(express.json()) 
 
 //habilitar csrf
 app.use( csrf({cookie: true}) )

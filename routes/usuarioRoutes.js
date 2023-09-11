@@ -5,8 +5,10 @@ const router = express.Router();
 
 
 router.get('/login', formularioLogin);
-router.get('/registro', formularioRegistro);
-router.post('/registro', registrar);
+router.get('/registro', formularioRegistro)
+router.post('/registro', registrar)
+
+//router.get('/confirmar', confirmar)
 
 router.get('/confirmar/:token', confirmar)
 
@@ -19,3 +21,5 @@ router.get('/olvide-password/:token', comprobarToken);
 router.post('/olvide-password/:token', nuevoPassword);
 
 export default router
+
+

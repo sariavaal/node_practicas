@@ -34,7 +34,7 @@ const registrar = async (req, res) => {
         //errores
         return res.render('auth/registro', {
             pagina: 'Crear Cuenta',
-            csrfToken: req.csrfToken,
+            csrfToken: req.csrfToken(),
             errores: resultado.array(),
             usuario: {
                 nombre: req.body.nombre,
@@ -53,7 +53,7 @@ const registrar = async (req, res) => {
     if(existeUsuario){
         return res.render('auth/registro', {
             pagina: 'Crear Cuenta',
-            csrfToken: req.csrfToken,
+            csrfToken: req.csrfToken(),
             errores:[{msg : 'El usuario ya esta registrado'}],
             usuario: {
                 nombre: req.body.nombre,
@@ -96,8 +96,7 @@ const confirmar = async (req, res) => {
     const usuario = await Usuario.findOne({where: {token}})
 
     if(!usuario){
-
-        return res.render('auth/confirmarCuenta', {
+        return res.render('auth/confirmar-cuenta', {
             pagina: 'Error al confirmar tu cuenta',
             mensaje: 'Hubo un error al confirmar tu cuenta, intenta de nuevo',
             error: true
@@ -110,7 +109,7 @@ const confirmar = async (req, res) => {
     usuario.confirmado = true;
     await usuario.save();
 
-    return res.render('auth/confirmarCuenta', {
+    res.render('auth/confirmar-cuenta', {
         pagina: 'Cuenta confirmada',
         mensaje: 'La cuenta se confirmo correctamente'
 
@@ -184,8 +183,20 @@ const resetPassword = async (req, res) => {
 
 }
 
-const comprobarToken = (req, res, next) => {
-    next()
+const comprobarToken = async (req, res, ) => {
+    const { token } = req.params;
+    const usuario = await Usuario.findOne({where : {token}})
+    if(!usuario) {
+        return res.render('auth/confirmarCuenta',{
+            pagina: 'Reestablece tu password',
+            mensaje: 'Hubo un error al validar tu información, intenta de nuevo',
+            error: true
+        })
+    }
+   // mostrar formulario para modificar password
+   res.render('auth/reset-password', {
+    pagina: 'Reestablece tu password'
+   })
 
 }
 
