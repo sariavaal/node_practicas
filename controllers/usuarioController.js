@@ -1,13 +1,80 @@
 import {check, validationResult} from 'express-validator'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import Usuario from '../models/Usuario.js'
-import { generarId } from '../helpers/tokens.js'
+import {generarJWT, generarId } from '../helpers/tokens.js'
 import {emailRegistro, emailOlvidePassword} from '../helpers/emails.js'
 
 const formularioLogin = (req, res) => {
     res.render('auth/login', {
-        pagina: 'Iniciar Sesión'
+        pagina: 'Iniciar Sesión',
+        csrfToken: req.csrfToken()
     })
+
+}
+
+const autenticar = async (req, res) => {
+    //validacion
+    await check('email').isEmail().withMessage('El email es obligatorio').run(req)
+    await check ('password').notEmpty().withMessage('El password es obligatorio').run(req) 
+
+    let resultado = validationResult(req)
+
+
+    // return res.json({errores: resultado.array()})
+     //verificar que el resultado este vacio
+     if(!resultado.isEmpty()) {
+         //errores
+         return res.render('auth/login', {
+             pagina: 'Iniciar sesión',
+             csrfToken: req.csrfToken(),
+             errores: resultado.array(),
+           
+         })
+ 
+     }
+
+     const { email, password} = req.body
+
+     //comprobar si el usuario existe
+     const usuario = await Usuario.findOne({ where: {email}})
+     if(!usuario) {
+        return res.render('auth/login',{
+            pagina: 'Iniciar sesión',
+            csrfToken: req.csrfToken(),
+            errores: [{msg: 'El usuario no existe'}]
+        })
+     }
+     // comprobar si el usuario esta confirmado
+     if(!usuario.confirmado) {
+        return res.render('auth/login',{
+            pagina: 'Iniciar sesión',
+            csrfToken: req.csrfToken(),
+            errores: [{msg: 'Tu cuenta no ha sido confirmada'}]
+        })
+
+     }
+     //Revisar el password
+     if(!usuario.verificarPassword(password)){
+        return res.render('auth/login',{
+            pagina: 'Iniciar sesión',
+            csrfToken: req.csrfToken(),
+            errores: [{msg: 'El password es incorrecto'}]
+        })
+
+     }
+     //Autenticar al usuario
+     const token = generarJWT({ id: usuario.id, nombre: usuario.nombre })
+
+     console.log(token)
+     //almacenar en un cookie
+     return res.cookie('_token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: true
+     }).redirect('/mis-propiedades')
+  
+
 
 }
 
@@ -239,6 +306,7 @@ const nuevoPassword = async (req, res) => {
 
 export {
     formularioLogin,
+    autenticar,
     formularioRegistro,
     registrar,
     confirmar,
