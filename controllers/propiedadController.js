@@ -13,19 +13,25 @@ const crear = async (req, res) => {
     //consultar modelo de precios y categorias
     const [categorias, precios] = await Promise.all([
         Categoria.findAll(),
-        Precio.findAll()
+        Precio.findAll(),
+        
 
-    ])
+    ]);
+    //obtener id desde reqbody o establecerlo como null
+    const CategoriaId = req.body.Categoria || null;
+
     res.render('propiedades/crear',{
         pagina: 'Crear propiedad',
         barra: true, 
         csrfToken: req.csrfToken(),
         categorias,
         precios,
-        datos: {}
+        datos: {
+            categoria: CategoriaId
+        }
 
-})
-}
+});
+} 
 
 const guardar = async (req, res) => {
     //validacion
@@ -49,6 +55,8 @@ const guardar = async (req, res) => {
                 datos: req.body
         })
     }
+    //crear un registro
+    console.log(req.body)
 
 } 
 
