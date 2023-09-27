@@ -23,7 +23,9 @@ router.post('/propiedades/crear',
     
 )
 
-router.get('/propiedades/agregar-imagen/:id', agregarImagen) 
+router.get('/propiedades/agregar-imagen/:id',
+    protegerRuta,
+    agregarImagen) 
 
 
 
